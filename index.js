@@ -64,6 +64,7 @@ app.get("/wallet/address-from-key/:privateKey", async (req, res) => {
   }
 });
 
-app.listen(config.port, "127.0.0.1", () => {
-  console.log(`🚀 TronWeb Nile API Running at http://127.0.0.1:${config.port}`);
+const PORT = process.env.PORT || config.port || 5050;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 TronWeb Nile API Running at http://0.0.0.0:${PORT}`);
 });
