@@ -2,6 +2,21 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const config = require("./config/config.js");
+
+// Validar variables de entorno requeridas
+const requiredEnvVars = [
+  'TRON_FULLNODE',
+  'USDT_CONTRACT',
+  'ACCESS_TOKEN'
+];
+
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (missingVars.length > 0) {
+  console.error('❌ Error: Faltan variables de entorno requeridas:', missingVars.join(', '));
+  console.error('Por favor, configura estas variables en Render antes de continuar.');
+  process.exit(1);
+}
+
 const {
   createWallet,
   isValidAddress,
@@ -25,34 +40,62 @@ app.use((req, res, next) => {
   next();
 });
 app.get("/wallet/create", async (req, res) => {
-  return res.json(await createWallet());
+  try {
+    return res.json(await createWallet());
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 app.get("/wallet/isAddress/:address", async (req, res) => {
-  return res.json({ ok: await isValidAddress(req.params.address) });
+  try {
+    return res.json({ ok: await isValidAddress(req.params.address) });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 app.get("/wallet/balance/:address", async (req, res) => {
-  return res.json({ balance: await getTrxBalance(req.params.address) });
+  try {
+    return res.json({ balance: await getTrxBalance(req.params.address) });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 app.get("/wallet/usdt/:address", async (req, res) => {
-  return res.json({ balance: await getUsdtBalance(req.params.address) });
+  try {
+    return res.json({ balance: await getUsdtBalance(req.params.address) });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 app.post("/wallet/usdt/send", async (req, res) => {
-  const { from, pk, to, amount } = req.body;
-  return res.json(await sendUsdt(from, pk, to, amount));
+  try {
+    const { from, pk, to, amount } = req.body;
+    return res.json(await sendUsdt(from, pk, to, amount));
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 app.post("/wallet/trx/send", async (req, res) => {
-  const { from, pk, to, amount } = req.body;
-  return res.json(await sendTrx(from, pk, to, amount));
+  try {
+    const { from, pk, to, amount } = req.body;
+    return res.json(await sendTrx(from, pk, to, amount));
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 app.get("/wallet/trc20/:address", async (req, res) => {
-  const { limit, fingerprint } = req.query;
-  return res.json(await getTrc20Transfers(req.params.address, Number(limit||50), fingerprint));
+  try {
+    const { limit, fingerprint } = req.query;
+    return res.json(await getTrc20Transfers(req.params.address, Number(limit||50), fingerprint));
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 app.get("/wallet/address-from-key/:privateKey", async (req, res) => {

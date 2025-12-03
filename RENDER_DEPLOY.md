@@ -6,17 +6,24 @@ Este documento contiene las instrucciones para desplegar la API de TronWeb en Re
 
 ### Variables de Entorno
 
+**⚠️ IMPORTANTE:** La aplicación valida las variables de entorno al iniciar. Si faltan las variables requeridas, la aplicación no iniciará.
+
 Configura las siguientes variables de entorno en el dashboard de Render (Settings → Environment):
 
+**Variables REQUERIDAS (la aplicación no iniciará sin estas):**
 ```
-PORT=5050
 TRON_FULLNODE=https://nile.trongrid.io
+USDT_CONTRACT=TU93jfy3WbRUoH15ouqepn4Vw85jckcygv
+ACCESS_TOKEN=tu_token_de_acceso_seguro
+```
+
+**Variables OPCIONALES (pero recomendadas):**
+```
+PORT=5050  (Render lo asigna automáticamente, pero puedes especificarlo)
 TRON_SOLIDITYNODE=https://nile.trongrid.io
 TRON_EVENTSERVER=https://nile.trongrid.io
-USDT_CONTRACT=TU93jfy3WbRUoH15ouqepn4Vw85jckcygv
 TRON_CUSTODY_PRIVATE_KEY=tu_clave_privada_aqui
 TRONGRID_API_KEY=tu_api_key_de_trongrid
-ACCESS_TOKEN=tu_token_de_acceso_seguro
 ```
 
 ### Pasos para Desplegar
@@ -43,9 +50,11 @@ ACCESS_TOKEN=tu_token_de_acceso_seguro
 
 ### Notas Importantes
 
+- **Validación de variables:** La aplicación valida las variables de entorno requeridas al iniciar. Si faltan, verás un error claro indicando cuáles faltan.
 - Render asignará automáticamente un puerto, pero la aplicación está configurada para usar la variable `PORT` de entorno
-- El servicio escucha en `0.0.0.0` para aceptar conexiones externas
-- Asegúrate de que todas las variables de entorno estén configuradas antes del primer despliegue
+- El servicio escucha en `0.0.0.0` para aceptar conexiones externas (necesario para Render)
+- **Manejo de errores:** Todas las rutas y funciones async tienen manejo de errores para evitar crashes
+- Asegúrate de que todas las variables de entorno requeridas estén configuradas antes del primer despliegue
 - El archivo `render.yaml` está incluido para configuración automática si prefieres usar Blueprint
 
 ### Verificación
