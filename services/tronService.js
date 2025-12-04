@@ -50,32 +50,31 @@ async function getUsdtBalance(address) {
       throw new Error(`Contrato USDT inválido: ${config.tron.usdtContract}`);
     }
     
-    // Crear una nueva instancia de TronWeb para asegurar conexión
-    const TronWeb = require("tronweb");
-    const tronWebInstance = new TronWeb({
-      fullHost: config.tron.fullNode
-    });
+    // Usar triggerConstantContract para obtener el balance
+    // Este método no requiere una transacción, solo lee el estado del contrato
+    const result = await tronWeb.transactionBuilder.triggerConstantContract(
+      config.tron.usdtContract,
+      "balanceOf(address)",
+      {},
+      [{ type: "address", value: address }],
+      address // Usar la misma dirección como owner_address para la llamada
+    );
     
-    // Esperar a que TronWeb esté listo
-    if (!tronWebInstance.isConnected) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-    
-    const contract = await tronWebInstance.contract().at(config.tron.usdtContract);
-    if (!contract || !contract.balanceOf) {
-      throw new Error("No se pudo cargar el contrato USDT o el método balanceOf no está disponible");
-    }
-    
-    const result = await contract.balanceOf(address).call();
-    if (result === null || result === undefined) {
+    if (!result || !result.constant_result || result.constant_result.length === 0) {
       throw new Error("No se pudo obtener el balance del contrato");
     }
     
-    return Number(result.toString()) / 1_000_000;
+    // El resultado viene en hex, convertir a BigNumber y luego a número
+    const balanceHex = result.constant_result[0];
+    // Remover el prefijo 0x si existe
+    const cleanHex = balanceHex.startsWith('0x') ? balanceHex.slice(2) : balanceHex;
+    // Convertir de hex a decimal
+    const balance = BigInt('0x' + cleanHex).toString();
+    
+    return Number(balance) / 1_000_000;
   } catch (error) {
     const errorMessage = error?.message || error?.toString() || String(error) || "Error desconocido";
-    const errorStack = error?.stack ? `\nStack: ${error.stack}` : "";
-    throw new Error(`Error al obtener balance USDT: ${errorMessage}${errorStack}`);
+    throw new Error(`Error al obtener balance USDT: ${errorMessage}`);
   }
 }
 
