@@ -32,11 +32,50 @@ async function getUsdtBalance(address) {
     if (!config.tron.usdtContract) {
       throw new Error("USDT_CONTRACT no está configurado");
     }
-    const contract = await tronWeb.contract().at(config.tron.usdtContract);
+    
+    if (!config.tron.fullNode) {
+      throw new Error("TRON_FULLNODE no está configurado");
+    }
+    
+    if (!address) {
+      throw new Error("La dirección es requerida");
+    }
+    
+    if (!tronWeb.isAddress(address)) {
+      throw new Error(`Dirección inválida: ${address}`);
+    }
+    
+    // Validar que el contrato sea una dirección válida
+    if (!tronWeb.isAddress(config.tron.usdtContract)) {
+      throw new Error(`Contrato USDT inválido: ${config.tron.usdtContract}`);
+    }
+    
+    // Crear una nueva instancia de TronWeb para asegurar conexión
+    const TronWeb = require("tronweb");
+    const tronWebInstance = new TronWeb({
+      fullHost: config.tron.fullNode
+    });
+    
+    // Esperar a que TronWeb esté listo
+    if (!tronWebInstance.isConnected) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    
+    const contract = await tronWebInstance.contract().at(config.tron.usdtContract);
+    if (!contract || !contract.balanceOf) {
+      throw new Error("No se pudo cargar el contrato USDT o el método balanceOf no está disponible");
+    }
+    
     const result = await contract.balanceOf(address).call();
+    if (result === null || result === undefined) {
+      throw new Error("No se pudo obtener el balance del contrato");
+    }
+    
     return Number(result.toString()) / 1_000_000;
   } catch (error) {
-    throw new Error(`Error al obtener balance USDT: ${error.message}`);
+    const errorMessage = error?.message || error?.toString() || String(error) || "Error desconocido";
+    const errorStack = error?.stack ? `\nStack: ${error.stack}` : "";
+    throw new Error(`Error al obtener balance USDT: ${errorMessage}${errorStack}`);
   }
 }
 
